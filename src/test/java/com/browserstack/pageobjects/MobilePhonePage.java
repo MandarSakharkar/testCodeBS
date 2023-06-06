@@ -2,6 +2,7 @@ package com.browserstack.pageobjects;
 
 import lombok.SneakyThrows;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -11,8 +12,9 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class MobilePhonePage {
 
@@ -32,6 +34,8 @@ public class MobilePhonePage {
     WebDriverWait webDriverWait;
 
     final String searchfieldLocator = "input[id='searchField_%d']";
+    final String searchfieldTopLocator = "input[id='searchField_%d_top']";
+
     final String mobileLocator = "//*[text()='%s']";
 
     public MobilePhonePage(WebDriver webDriver){
@@ -51,9 +55,10 @@ public class MobilePhonePage {
         compareMobileLink.click();
     }
     public void enterMobileNameInSearchField(String mobileName, int searchFieldNumber) {
-        By by = By.cssSelector(String.format(searchfieldLocator, searchFieldNumber));
-        webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(by));
+        String locator = String.format( (searchFieldNumber>0? searchfieldTopLocator :searchfieldLocator), searchFieldNumber);
+        By by = By.cssSelector(locator);
         WebElement searchField = driver.findElement(by);
+        webDriverWait.until(ExpectedConditions.elementToBeClickable(searchField));
         searchField.sendKeys(mobileName);
     }
 
@@ -66,13 +71,24 @@ public class MobilePhonePage {
     }
 
     public void printTheSearchResultsAsPerPrinceInAscendingOrder() {
-        mobilePhoneList.parallelStream().sorted(Comparator.comparing( element ->
-                element.findElement(By.className("compare-mob-price")).getText()
-        ));
-        mobilePhoneList.stream().forEach(element -> {System.out.println(element.findElement(By.cssSelector(".mobile-details a")).getText());});
+
+        Map<Integer,String> phonePriceMap = new TreeMap<>();
+        mobilePhoneList.parallelStream().forEach(element -> {
+            int price = Integer.parseInt(element.findElement(By.cssSelector(".compare-mob-price>span")).getText().replace("₹", "").replace(",","").replaceAll(" ",""));
+            String name = element.findElement(By.className("mobile-details")).getText();
+            phonePriceMap.put(price,name);
+        });
+        phonePriceMap.entrySet().stream().forEach(entry -> System.out.println(String.format("<%s - %s>",entry.getValue(),entry.getKey())));
     }
 
     public void printTheSearchResultsAsPerExpertScoreInDescendingOrder() {
-        mobileRatingList.parallelStream().sorted(Comparator.comparing(element -> element.getText()).reversed());
+        Map<Float,String> phoneRateMap = new TreeMap<>(Collections.reverseOrder());
+        final AtomicInteger index = new AtomicInteger(0);
+        mobileRatingList.forEach(element -> {
+            float rating = Float.parseFloat(element.getText());
+            String name = mobilePhoneList.get(index.getAndIncrement()).findElement(By.className("mobile-details")).getText();
+            phoneRateMap.put(rating,name);
+        });
+        phoneRateMap.entrySet().stream().forEach(entry -> System.out.println(String.format("<%s - %s>",entry.getValue(),entry.getKey())));
     }
 }

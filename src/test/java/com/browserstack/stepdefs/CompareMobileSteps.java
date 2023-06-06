@@ -41,9 +41,11 @@ public class CompareMobileSteps {
         mobilePhonePage.enterMobileNameInSearchField(mobileName,searchFieldNumber);
     }
 
+    @SneakyThrows
     @When("I select mobile as {string}")
     public void iSelectMobileAsSamsungGalaxyS(String mobileName) {
         mobilePhonePage.selectMobile(mobileName);
+        Thread.sleep(1000);
     }
 
     @SneakyThrows
