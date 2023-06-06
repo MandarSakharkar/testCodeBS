@@ -1,0 +1,13 @@
+Feature: BrowserStack Demo
+
+  @run
+  Scenario: Add product to cart
+    Given I am on the website 'https://www.bstackdemo.com'
+    When I select a product and click on 'Add to cart' button
+    Then the product should be added to cart
+
+  @run
+  Scenario: Add product to cart again
+    Given I am on the website 'https://www.bstackdemo.com'
+    When I select a product and click on 'Add to cart' button
+    Then the product should be added to cart
