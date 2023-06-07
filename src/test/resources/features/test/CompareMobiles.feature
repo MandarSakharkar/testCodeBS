@@ -1,6 +1,5 @@
 Feature: BrowserStack Demo
 
-  @price
   Scenario: print sorted mobile list as per Price and expert score
     Given I am on the webPage 'https://www.mysmartprice.com'
     When I navigate to compare mobiles page
@@ -12,5 +11,17 @@ Feature: BrowserStack Demo
     When I select mobile as "OnePlus 9"
     When I entered mobile name as "Apple iPhone 12" in search field 3
     When I select mobile as "Apple iPhone 12"
+    When I print the search results as per price in ascending order
+    When I print the search results as per expert score in descending order
+
+  @price
+  Scenario: print sorted mobile list as per Price and expert score with data table
+    Given I am on the webPage 'https://www.mysmartprice.com'
+    When I navigate to compare mobiles page
+    When I entered mobile name and select the mobile
+    |Samsung Galaxy S21|0|
+    |vivo X60 Pro      |1|
+    |OnePlus 9         |2|
+    |Apple iPhone 12   |3|
     When I print the search results as per price in ascending order
     When I print the search results as per expert score in descending order

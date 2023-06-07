@@ -2,12 +2,15 @@ package com.browserstack.stepdefs;
 
 import com.browserstack.pageobjects.MobilePhonePage;
 import com.browserstack.utils.WebdriverManager;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import lombok.SneakyThrows;
 import org.openqa.selenium.WebDriver;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
+
+import java.util.Map;
 
 public class CompareMobileSteps {
     WebDriver driver;
@@ -21,8 +24,8 @@ public class CompareMobileSteps {
 
     @Given("^I am on the webPage '(.+)'$")
     public void I_am_on_the_website(String url){
-        driver.get(url);
         driver.manage().window().maximize();
+        driver.get(url);
     }
 
     @After
@@ -58,5 +61,20 @@ public class CompareMobileSteps {
     @When("I print the search results as per expert score in descending order")
     public void iPrintTheSearchResultsAsPerExpertScoreInDescendingOrder() {
         mobilePhonePage.printTheSearchResultsAsPerExpertScoreInDescendingOrder();
+    }
+
+    @When("I entered mobile name and select the mobile")
+    public void iEnteredMobileNameAndSelectTheMobile(DataTable dataTable) {
+        Map<String, Integer> data = dataTable.asMap(String.class, Integer.class);
+        data.entrySet().stream().forEach(entry -> {
+            mobilePhonePage.enterMobileNameInSearchField(entry.getKey(),entry.getValue());
+            mobilePhonePage.selectMobile(entry.getKey());
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
     }
 }

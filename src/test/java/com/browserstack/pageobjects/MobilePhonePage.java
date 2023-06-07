@@ -1,10 +1,8 @@
 package com.browserstack.pageobjects;
 
-import lombok.SneakyThrows;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
@@ -14,7 +12,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class MobilePhonePage {
 
@@ -31,6 +28,11 @@ public class MobilePhonePage {
 
     @FindBy(css = "span.prdct-dtl__tlbr-item__scre")
     List<WebElement> mobileRatingList;
+
+    private static final Logger LOGGER = LogManager.getLogger(MobilePhonePage.class);
+
+    @FindBy(css = ".prdt_name")
+    List<WebElement> productNameList;
     WebDriverWait webDriverWait;
 
     final String searchfieldLocator = "input[id='searchField_%d']";
@@ -60,14 +62,26 @@ public class MobilePhonePage {
         WebElement searchField = driver.findElement(by);
         webDriverWait.until(ExpectedConditions.elementToBeClickable(searchField));
         searchField.sendKeys(mobileName);
+        by = By.xpath(String.format(mobileLocator, mobileName));
+        try {
+            webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(by));
+        } catch (TimeoutException timeoutException){
+            searchField.sendKeys(mobileName);
+            webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(by));
+        }
     }
 
     public void selectMobile(String mobileName) {
         By by = By.xpath(String.format(mobileLocator, mobileName));
-        webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(by));
         WebElement mobileToCompare = driver.findElement(by);
-        webDriverWait.until(ExpectedConditions.elementToBeClickable(mobileToCompare));
-        mobileToCompare.click();
+        JavascriptExecutor executor = (JavascriptExecutor)driver;
+        try {
+            executor.executeScript("arguments[0].click();", mobileToCompare);
+        } catch (StaleElementReferenceException se){
+
+            mobileToCompare = driver.findElement(by);
+            executor.executeScript("arguments[0].click();", mobileToCompare);
+        }
     }
 
     public void printTheSearchResultsAsPerPrinceInAscendingOrder() {
@@ -78,7 +92,7 @@ public class MobilePhonePage {
             String name = element.findElement(By.className("mobile-details")).getText();
             phonePriceMap.put(price,name);
         });
-        phonePriceMap.entrySet().stream().forEach(entry -> System.out.println(String.format("<%s - %s>",entry.getValue(),entry.getKey())));
+        phonePriceMap.entrySet().stream().forEach(entry -> LOGGER.info(String.format("<%s - %s>",entry.getValue(),entry.getKey())));
     }
 
     public void printTheSearchResultsAsPerExpertScoreInDescendingOrder() {
@@ -89,6 +103,6 @@ public class MobilePhonePage {
             String name = mobilePhoneList.get(index.getAndIncrement()).findElement(By.className("mobile-details")).getText();
             phoneRateMap.put(rating,name);
         });
-        phoneRateMap.entrySet().stream().forEach(entry -> System.out.println(String.format("<%s - %s>",entry.getValue(),entry.getKey())));
+        phoneRateMap.entrySet().stream().forEach(entry -> LOGGER.info(String.format("<%s - %s>",entry.getValue(),entry.getKey())));
     }
 }
